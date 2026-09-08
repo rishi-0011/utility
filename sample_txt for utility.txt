@@ -1,0 +1,30 @@
+1   H V Charging          DO  Channel 0   HVCharg
+2   Emergency Signal      DO  Channel 1   EmerSign
+3   MTSignal              DO  Channel 2   MTSignal
+4   Pol+ Gen CC           DO  Channel 3   PolPlusGenCC
+5   Pol- Gen CC           DO  Channel 4   PolMinGenCC
+6   Hooter                DO  Channel 5   Hooter
+7   GND Control           DO  Channel 6   GNDControl
+8   IMC FS Supply         DO  Channel 7   IMCFSSupply
+9   Decrease Dist GTU     DO  Channel 8   DecDistGTU
+10  Increase Dist GTU     DO  Channel 9   IncDistGTU
+11  Increase MSG          DO  Channel 10  IncMSG
+12  Start Charge          DO  Channel 11  StartCharge
+13  Pol - Card            DO  Channel 12  PolMinCard
+14  Pol + Card            DO  Channel 13  PolPlusCard
+15  Maharshi              DO  Channel 14  Maharshi 
+16  Inc Press GTN         DO  Channel 15  IncPressGTN
+17  Dec Press GTN         DO  Channel 16  DecPressGTN
+18  Plunger All Stages    DO  Channel 17  PlungerAll
+19  Plunger 1 Stage       DO  Channel 18  Plunger1
+20  Plunger 2 Stage       DO  Channel 19  Plunger2
+21  Sphere A GTN          DO  Channel 20  SphereAGTN
+22  Sphere B GTN          DO  Channel 21  SphereBGTN
+23  Sphere A IMC          DO  Channel 22  SphereAIMC
+24  Sphere B IMC          DO  Channel 23  SphereBIMC
+25  Inc Press IMC         DO  Channel 24  IncPressIMC
+26  Dec Press IMC         DO  Channel 25  DecPressIMC
+27  xx                    DO  Channel 26  xx
+28  xx                    DO  Channel 27  xx
+29  xx                    DO  Channel 28  xx
+30  xx                    DO  Channel 29  xx
