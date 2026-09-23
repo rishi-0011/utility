@@ -12,7 +12,7 @@ class GTUCurveWindow(tk.Toplevel):
         self.app_ref = app_ref
         self.state_key = state_key
         if not hasattr(self, "display_title"):
-            self.display_title = "Voltage vs Sphere Distance"
+            self.display_title = "Definition GTU Voltage-Distance Curves"
         self.title("Gap Distance Setting")
         self.resizable(True, True)
         self.minsize(740, 560)
@@ -24,10 +24,12 @@ class GTUCurveWindow(tk.Toplevel):
         self.COLOR_GRAPH_BG = "#000000"    # Black graph background
         self.COLOR_GRID = "#262626"        # Subtle grid lines
         self.COLOR_CURVE = "#ff0000"       # Red curve line
-        self.COLOR_EXIT = "#facc15"        # Yellow exit button
-        self.COLOR_ORANGE = "#f3a812"      # Orange for selected row, Add, Del, p, q
+        self.COLOR_EXIT = "#ffff00"        # Yellow exit button
+        self.COLOR_ORANGE = "#fca834"      # Orange for Add, Del, p, q
+        self.COLOR_SEL = "#ffff00"         # Bright yellow selected row highlight
         self.COLOR_TEXT_LIGHT = "#ffffff"  # White text
 
+        self.ratio = 0.0
         self.configure(bg=self.COLOR_BG)
 
         self.font_title = ("Arial", 14, "bold")
@@ -103,6 +105,8 @@ class GTUCurveWindow(tk.Toplevel):
         self.title_canvas = tk.Canvas(header_frame, bg=self.COLOR_PANEL, highlightthickness=0)
         self.title_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        f_font = ("Arial", 15, "bold")
+
         def update_title(event=None):
             self.title_canvas.delete("all")
             w = self.title_canvas.winfo_width()
@@ -111,9 +115,9 @@ class GTUCurveWindow(tk.Toplevel):
                 w = 600
             cx = w // 2
             cy = h // 2 if h > 10 else 22
-            d_title = getattr(self, "display_title", "Voltage vs Sphere Distance")
-            self.title_canvas.create_text(cx + 1, cy + 1, text=d_title, fill="#1a2030", font=self.font_title)
-            self.title_canvas.create_text(cx, cy, text=d_title, fill="#ffffff", font=self.font_title)
+            d_title = getattr(self, "display_title", "Definition GTU Voltage-Distance Curves")
+            self.title_canvas.create_text(cx + 1, cy + 1, text=d_title, fill="#000000", font=f_font)
+            self.title_canvas.create_text(cx, cy, text=d_title, fill="#ffffff", font=f_font)
 
         self.title_canvas.bind("<Configure>", update_title)
 
@@ -137,13 +141,13 @@ class GTUCurveWindow(tk.Toplevel):
         # ----------------------------------------------------------------------
         # RIGHT: Data Table, Inputs, Ratio
         # ----------------------------------------------------------------------
-        right_panel = tk.Frame(content_split, bg=self.COLOR_PANEL, width=280)
+        right_panel = tk.Frame(content_split, bg=self.COLOR_PANEL, width=285)
         right_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 4), pady=4)
         right_panel.pack_propagate(False)
 
         # 1. Table + Side Buttons (p / q) Container
         tbl_container = tk.Frame(right_panel, bg=self.COLOR_PANEL)
-        tbl_container.pack(fill=tk.X, pady=(0, 6))
+        tbl_container.pack(fill=tk.BOTH, expand=True, pady=(0, 6))
 
         # Side Buttons (p / q) on the right of table
         btn_pq_frame = tk.Frame(tbl_container, bg=self.COLOR_PANEL)
@@ -154,14 +158,14 @@ class GTUCurveWindow(tk.Toplevel):
             font=("Arial", 9, "bold"), relief=tk.RAISED, bd=2, width=2, height=1,
             cursor="hand2", command=self.on_nav_up
         )
-        btn_p.pack(pady=(18, 4))
+        btn_p.pack(pady=(40, 10))
 
         btn_q = tk.Button(
             btn_pq_frame, text="q", bg=self.COLOR_ORANGE, fg="black",
             font=("Arial", 9, "bold"), relief=tk.RAISED, bd=2, width=2, height=1,
             cursor="hand2", command=self.on_nav_down
         )
-        btn_q.pack(pady=(4, 0))
+        btn_q.pack(pady=(10, 0))
 
         # Table outer frame
         tbl_outer = tk.Frame(tbl_container, bg="#5c6877", bd=1, relief=tk.SUNKEN)
@@ -174,7 +178,7 @@ class GTUCurveWindow(tk.Toplevel):
         tk.Label(tbl_header, text="Voltage [kV]", bg="#c0c8d4", fg="#0a1018", font=self.font_header, width=12, bd=1, relief=tk.GROOVE).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Table Canvas (with scrollbar)
-        self.tbl_canvas = tk.Canvas(tbl_outer, bg="#ffffff", bd=0, highlightthickness=0, height=185)
+        self.tbl_canvas = tk.Canvas(tbl_outer, bg="#ffffff", bd=0, highlightthickness=0, height=240)
         self.tbl_scroll = tk.Scrollbar(tbl_outer, orient=tk.VERTICAL, command=self.tbl_canvas.yview)
         self.tbl_canvas.configure(yscrollcommand=self.tbl_scroll.set)
 
@@ -187,61 +191,64 @@ class GTUCurveWindow(tk.Toplevel):
         self.tbl_inner.bind("<Configure>", lambda e: self.tbl_canvas.configure(scrollregion=self.tbl_canvas.bbox("all")))
         self.tbl_canvas.bind("<Configure>", lambda e: self.tbl_canvas.itemconfig(self.tbl_canvas_window, width=e.width))
 
-        # 3. Inputs Section (Distance, Voltage, Add, Del)
+        # 3. Numeric Inputs & Action Buttons (Distance/Add in Col 1, Voltage/Del in Col 2)
         inputs_box = tk.Frame(right_panel, bg=self.COLOR_PANEL)
-        inputs_box.pack(fill=tk.X, pady=(4, 6))
+        inputs_box.pack(fill=tk.X, pady=(4, 4))
+        inputs_box.columnconfigure(0, weight=1, uniform="ctrl_col")
+        inputs_box.columnconfigure(1, weight=1, uniform="ctrl_col")
 
-        r_inputs = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
-        r_inputs.pack(fill=tk.X)
+        col_d = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
+        col_d.grid(row=0, column=0, sticky="nsew", padx=(2, 6))
 
-        # Distance input
-        col_d = tk.Frame(r_inputs, bg=self.COLOR_PANEL)
-        col_d.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 4))
-        tk.Label(col_d, text="Distance [mm]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center")
-        self.spin_d, self.entry_d = self.make_numeric_box(col_d, "0.00")
-        self.spin_d.pack(anchor="center")
-
-        # Voltage input
-        col_v = tk.Frame(r_inputs, bg=self.COLOR_PANEL)
-        col_v.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(4, 0))
-        tk.Label(col_v, text="Voltage [KV]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center")
-        self.spin_v, self.entry_v = self.make_numeric_box(col_v, "0.0")
-        self.spin_v.pack(anchor="center")
-
-        # Buttons: Add & Del
-        r_btns = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
-        r_btns.pack(fill=tk.X, pady=(6, 0))
-
+        tk.Label(col_d, text="Distance [mm]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center", pady=(0, 2))
+        self.spin_d, self.entry_d = self.make_numeric_box(col_d, "0.00", precision=2, step=1.0)
+        self.spin_d.pack(anchor="center", pady=(0, 6))
         btn_add = tk.Button(
-            r_btns, text="Add", bg=self.COLOR_ORANGE, fg="black",
-            font=self.font_btn, relief=tk.RAISED, bd=2, width=8,
+            col_d, text="Add", bg=self.COLOR_ORANGE, fg="black",
+            font=self.font_btn, relief=tk.RAISED, bd=2, width=10,
             cursor="hand2", command=self.on_add_point
         )
-        btn_add.pack(side=tk.LEFT, expand=True, padx=(0, 4))
+        btn_add.pack(anchor="center")
 
+        col_v = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
+        col_v.grid(row=0, column=1, sticky="nsew", padx=(6, 2))
+
+        tk.Label(col_v, text="Voltage [KV]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center", pady=(0, 2))
+        self.spin_v, self.entry_v = self.make_numeric_box(col_v, "0.0", precision=1, step=1.0)
+        self.spin_v.pack(anchor="center", pady=(0, 6))
         btn_del = tk.Button(
-            r_btns, text="Del", bg=self.COLOR_ORANGE, fg="black",
-            font=self.font_btn, relief=tk.RAISED, bd=2, width=8,
+            col_v, text="Del", bg=self.COLOR_ORANGE, fg="black",
+            font=self.font_btn, relief=tk.RAISED, bd=2, width=10,
             cursor="hand2", command=self.on_del_point
         )
-        btn_del.pack(side=tk.LEFT, expand=True, padx=(4, 0))
+        btn_del.pack(anchor="center")
 
         # 4. Default Modify Ratio [%] Digital Readout
         r_ratio = tk.Frame(right_panel, bg=self.COLOR_PANEL)
-        r_ratio.pack(fill=tk.X, pady=(8, 0))
+        r_ratio.pack(fill=tk.X, pady=(4, 6))
 
         tk.Label(r_ratio, text="Default Modify Ratio [%]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center")
 
         ratio_sub = tk.Frame(r_ratio, bg=self.COLOR_PANEL)
         ratio_sub.pack(anchor="center", pady=(3, 0))
 
-        sp_f = tk.Frame(ratio_sub, bg="#d0d8e8", bd=1, relief=tk.RAISED, cursor="hand2")
-        sp_f.pack(side=tk.LEFT, padx=(0, 2))
-        tk.Label(sp_f, text="▲\n▼", bg="#d0d8e8", fg="#1a2030", font=("Arial", 6, "bold")).pack(padx=2, pady=1)
+        sp_f = tk.Frame(ratio_sub, bg="#d0d8e8", bd=1, relief=tk.RAISED)
+        sp_f.pack(side=tk.LEFT, padx=(0, 3))
+
+        btn_ratio_up = tk.Label(sp_f, text="▲", bg="#d0d8e8", fg="#1a2030", font=("Arial", 6, "bold"), cursor="hand2")
+        btn_ratio_up.pack(padx=2, pady=(1, 0))
+        btn_ratio_up.bind("<Button-1>", lambda e: self.on_ratio_change(1.0))
+
+        btn_ratio_down = tk.Label(sp_f, text="▼", bg="#d0d8e8", fg="#1a2030", font=("Arial", 6, "bold"), cursor="hand2")
+        btn_ratio_down.pack(padx=2, pady=(0, 1))
+        btn_ratio_down.bind("<Button-1>", lambda e: self.on_ratio_change(-1.0))
 
         read_f = tk.Frame(ratio_sub, bg="#000000", bd=2, relief=tk.SUNKEN)
         read_f.pack(side=tk.LEFT)
-        self.lbl_ratio = tk.Label(read_f, text="0.0", bg="#000000", fg="#00ff00", font=self.font_digital, width=8, anchor="center")
+        self.lbl_ratio = tk.Label(
+            read_f, text=f"{self.ratio:.1f}", bg="#000000", fg="#00ff00",
+            font=self.font_digital, width=8, anchor="center"
+        )
         self.lbl_ratio.pack(padx=4, pady=1)
 
         self.refresh_table()
@@ -280,7 +287,7 @@ class GTUCurveWindow(tk.Toplevel):
 
         for idx, (dist, volt) in enumerate(self.curve_data):
             is_sel = (idx == self.selected_index)
-            row_bg = self.COLOR_ORANGE if is_sel else "#ffffff"
+            row_bg = self.COLOR_SEL if is_sel else "#ffffff"
             row_fg = "#000000"
 
             row = tk.Frame(self.tbl_inner, bg=row_bg, bd=1, relief=tk.GROOVE, cursor="hand2")
@@ -313,6 +320,15 @@ class GTUCurveWindow(tk.Toplevel):
             self.selected_index = idx
             self.refresh_table()
             self.draw_graph()
+
+            total_rows = len(self.curve_data)
+            if total_rows > 0:
+                fraction = max(0.0, min(1.0, (idx - 3) / total_rows))
+                self.tbl_canvas.yview_moveto(fraction)
+
+    def on_ratio_change(self, delta):
+        self.ratio = max(0.0, self.ratio + delta)
+        self.lbl_ratio.config(text=f"{self.ratio:.1f}")
 
     def on_nav_up(self):
         if self.selected_index > 0:
@@ -396,14 +412,14 @@ class GTUCurveWindow(tk.Toplevel):
             coords.extend([px, py])
 
         if len(coords) >= 4:
-            c.create_line(coords, fill=self.COLOR_CURVE, width=2)
+            c.create_line(coords, fill=self.COLOR_CURVE, width=2, smooth=True)
 
         # Highlight selected point
         if 0 <= self.selected_index < len(self.curve_data):
             sd, sv = self.curve_data[self.selected_index]
             spx = gx1 + (sd / 50.0) * gw
             spy = gy2 - (sv / 100.0) * gh
-            c.create_oval(spx - 4, spy - 4, spx + 4, spy + 4, fill="#fdb926", outline="#ffffff", width=1.5)
+            c.create_oval(spx - 4, spy - 4, spx + 4, spy + 4, fill="#ffff00", outline="#ffffff", width=1.5)
 
 
 # ==============================================================================

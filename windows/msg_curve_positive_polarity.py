@@ -313,44 +313,37 @@ class MSGCurveWindow(tk.Toplevel):
             self.tbl_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         self.tbl_canvas.bind_all("<MouseWheel>", on_mousewheel)
 
-        # 3. Numeric Inputs (Distance [mm] & Voltage [KV])
+        # 3. Numeric Inputs & Action Buttons (Distance/Add in Col 1, Voltage/Del in Col 2)
         inputs_box = tk.Frame(right_panel, bg=self.COLOR_PANEL)
         inputs_box.pack(fill=tk.X, pady=(4, 4))
+        inputs_box.columnconfigure(0, weight=1, uniform="ctrl_col")
+        inputs_box.columnconfigure(1, weight=1, uniform="ctrl_col")
 
-        r_inputs = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
-        r_inputs.pack(fill=tk.X)
+        col_d = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
+        col_d.grid(row=0, column=0, sticky="nsew", padx=(2, 6))
 
-        # Distance input
-        col_d = tk.Frame(r_inputs, bg=self.COLOR_PANEL)
-        col_d.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 4))
-        tk.Label(col_d, text="Distance [mm]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center")
+        tk.Label(col_d, text="Distance [mm]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center", pady=(0, 2))
         self.spin_d, self.entry_d = self.make_numeric_box(col_d, "0.00", precision=2, step=1.0)
-        self.spin_d.pack(anchor="center")
-
-        # Voltage input
-        col_v = tk.Frame(r_inputs, bg=self.COLOR_PANEL)
-        col_v.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(4, 0))
-        tk.Label(col_v, text="Voltage [KV]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center")
-        self.spin_v, self.entry_v = self.make_numeric_box(col_v, "0.0", precision=1, step=1.0)
-        self.spin_v.pack(anchor="center")
-
-        # Action Buttons: Add & Del
-        r_btns = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
-        r_btns.pack(fill=tk.X, pady=(6, 2))
-
+        self.spin_d.pack(anchor="center", pady=(0, 6))
         btn_add = tk.Button(
-            r_btns, text="Add", bg=self.COLOR_ORANGE, fg="black",
-            font=self.font_btn, relief=tk.RAISED, bd=2, width=9, pady=1,
+            col_d, text="Add", bg=self.COLOR_ORANGE, fg="black",
+            font=self.font_btn, relief=tk.RAISED, bd=2, width=10, pady=1,
             cursor="hand2", command=self.on_add_point
         )
-        btn_add.pack(side=tk.LEFT, expand=True, padx=(2, 4))
+        btn_add.pack(anchor="center")
 
+        col_v = tk.Frame(inputs_box, bg=self.COLOR_PANEL)
+        col_v.grid(row=0, column=1, sticky="nsew", padx=(6, 2))
+
+        tk.Label(col_v, text="Voltage [KV]", bg=self.COLOR_PANEL, fg="#0a1018", font=self.font_header).pack(anchor="center", pady=(0, 2))
+        self.spin_v, self.entry_v = self.make_numeric_box(col_v, "0.0", precision=1, step=1.0)
+        self.spin_v.pack(anchor="center", pady=(0, 6))
         btn_del = tk.Button(
-            r_btns, text="Del", bg=self.COLOR_ORANGE, fg="black",
-            font=self.font_btn, relief=tk.RAISED, bd=2, width=9, pady=1,
+            col_v, text="Del", bg=self.COLOR_ORANGE, fg="black",
+            font=self.font_btn, relief=tk.RAISED, bd=2, width=10, pady=1,
             cursor="hand2", command=self.on_del_point
         )
-        btn_del.pack(side=tk.LEFT, expand=True, padx=(4, 2))
+        btn_del.pack(anchor="center")
 
         # 4. Default Modify Ratio [%] Digital Readout
         r_ratio = tk.Frame(right_panel, bg=self.COLOR_PANEL)
