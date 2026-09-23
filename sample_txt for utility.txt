@@ -12,7 +12,7 @@
 12  Start Charge          DO  Channel 11  StartCharge
 13  Pol - Card            DO  Channel 12  PolMinCard
 14  Pol + Card            DO  Channel 13  PolPlusCard
-15  Maharshi              DO  Channel 14  Maharshi 
+15  Maharshi               DO  Channel 14  Maharshi 
 16  Inc Press GTN         DO  Channel 15  IncPressGTN
 17  Dec Press GTN         DO  Channel 16  DecPressGTN
 18  Plunger All Stages    DO  Channel 17  PlungerAll
